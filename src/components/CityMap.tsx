@@ -8,13 +8,14 @@ import { useToast } from '@/components/ui/use-toast';
 const CityMap: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const { selectedCity, mapApiKey, mapMode } = useMapContext();
+  const { selectedCity, mapApiKey, mapMode, carPosition, carRotation, carSpeed } = useMapContext();
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   // For free map mode
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const contextRef = useRef<CanvasRenderingContext2D | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (mapMode === 'free') {
@@ -141,16 +142,70 @@ const CityMap: React.FC = () => {
     // Draw buildings
     drawBuildings(ctx, width, height);
     
+    // Draw car
+    drawCar(ctx, carPosition.x, carPosition.y, carRotation, carSpeed);
+    
     // Add city name
     ctx.font = 'bold 24px Arial';
     ctx.fillStyle = 'black';
     ctx.textAlign = 'center';
     ctx.fillText(selectedCity.name, width / 2, 30);
     
-    toast({
-      title: "המפה נטענה בהצלחה",
-      description: `כעת אתה נמצא במפת הדמה של ${selectedCity.name}`,
-    });
+    if (animationFrameRef.current === null) {
+      toast({
+        title: "המפה נטענה בהצלחה",
+        description: `כעת אתה נמצא במפת הדמה של ${selectedCity.name}`,
+      });
+    }
+    
+    // Request next animation frame
+    animationFrameRef.current = requestAnimationFrame(renderFreeMap);
+  };
+  
+  // Draw the car on the canvas
+  const drawCar = (ctx: CanvasRenderingContext2D, x: number, y: number, rotation: number, speed: number) => {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate((rotation * Math.PI) / 180);
+    
+    // Car body
+    ctx.fillStyle = speed < 0 ? '#ff6666' : '#3366ff';
+    ctx.fillRect(-15, -10, 30, 20);
+    
+    // Car roof
+    ctx.fillStyle = '#222222';
+    ctx.fillRect(-10, -8, 20, 16);
+    
+    // Wheels
+    ctx.fillStyle = '#333333';
+    ctx.fillRect(-12, -12, 6, 4); // Front left
+    ctx.fillRect(6, -12, 6, 4);   // Front right
+    ctx.fillRect(-12, 8, 6, 4);   // Back left
+    ctx.fillRect(6, 8, 6, 4);     // Back right
+    
+    // Headlights
+    if (speed > 0) {
+      ctx.fillStyle = '#ffff00';
+    } else {
+      ctx.fillStyle = '#ffffff';
+    }
+    ctx.fillRect(-14, -6, 2, 4); // Left
+    ctx.fillRect(12, -6, 2, 4);  // Right
+    
+    // Taillights (red when braking)
+    ctx.fillStyle = speed < 0 || carSpeed === 0 ? '#ff0000' : '#660000';
+    ctx.fillRect(-14, 2, 2, 4); // Left
+    ctx.fillRect(12, 2, 2, 4);  // Right
+    
+    // Speed indicator
+    if (Math.abs(speed) > 0) {
+      ctx.font = '10px Arial';
+      ctx.fillStyle = 'white';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${Math.abs(speed)}`, 0, 4);
+    }
+    
+    ctx.restore();
   };
   
   const drawRoads = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
@@ -248,6 +303,20 @@ const CityMap: React.FC = () => {
     ctx.fillRect(width * 0.1, height * 0.8, width * 0.1, height * 0.1);
     ctx.fillRect(width * 0.8, height * 0.8, width * 0.1, height * 0.1);
   };
+
+  // Clean up animation frame on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, []);
 
   if (!selectedCity) {
     return <div className="flex items-center justify-center h-full">אנא בחר עיר להתחיל</div>;
