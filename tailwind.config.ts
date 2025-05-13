@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,16 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				game: {
+					'blue': '#1A73E8',
+					'dark-blue': '#0B3B72',
+					'light-blue': '#4285F4',
+					'green': '#34A853',
+					'red': '#EA4335',
+					'yellow': '#FBBC05',
+					'gray': '#5F6368',
+					'light-gray': '#DADCE0',
 				}
 			},
 			borderRadius: {
@@ -84,11 +95,21 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-light': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.7' }
+				},
+				'car-move': {
+					'0%': { transform: 'translateX(0) translateY(0)' },
+					'100%': { transform: 'translateX(100%) translateY(0)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-light': 'pulse-light 1.5s infinite',
+				'car-move': 'car-move 10s linear infinite'
 			}
 		}
 	},
