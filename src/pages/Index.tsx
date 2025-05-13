@@ -11,10 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Car, MapPin } from 'lucide-react';
 
 const Index = () => {
-  const { selectedCity, mapApiKey } = useMapContext();
+  const { selectedCity, mapApiKey, mapMode } = useMapContext();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  if (!mapApiKey) {
+  const hasMapConfiguration = mapMode === 'free' || mapApiKey;
+
+  if (!hasMapConfiguration) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <MapboxApiKeyInput />
@@ -35,6 +37,11 @@ const Index = () => {
             <div className="p-4 border-b">
               <h1 className="text-2xl font-bold text-game-blue">סימולטור נהיגה</h1>
               <p className="text-sm text-gray-500">נהג בערים אמיתיות</p>
+              {mapMode === 'free' && (
+                <div className="mt-1 text-xs bg-blue-50 text-blue-600 p-1 rounded">
+                  מצב מפה חינמית
+                </div>
+              )}
             </div>
             
             <Tabs defaultValue="city">
